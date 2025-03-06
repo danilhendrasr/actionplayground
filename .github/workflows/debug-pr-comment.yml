@@ -65,3 +65,17 @@ jobs:
 
               I'll keep you updated on my progress. Please stand by...`
             });
+            
+      - name: Checkout PR branch
+        run: |
+          git fetch origin ${{ steps.pr.outputs.branch }}:${{ steps.pr.outputs.branch }}
+          git checkout ${{ steps.pr.outputs.branch }}
+      - name: Rebase onto main
+        run: |
+          git fetch origin main:main
+          git rebase main
+          if [ $? -ne 0 ]; then
+            echo "Rebase failed. There might be conflicts."
+            git rebase --abort
+            exit 1
+          fi
