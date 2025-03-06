@@ -1,0 +1,18 @@
+name: Debug PR Comment
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Event Details
+        run: |
+          echo "Triggered by issue comment: ${{ github.event.comment.body }}"
+          echo "Issue number: ${{ github.event.issue.number }}"
+          echo "Pull request: ${{ github.event.issue.pull_request }}"
+          echo "Pull request number: ${{ github.event.issue.pull_request.number }}"
+          echo "Pull request title: ${{ github.event.issue.pull_request.title }}"
+          echo "Pull request body: ${{ github.event.issue.pull_request.body }}"
