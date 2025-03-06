@@ -16,3 +16,52 @@ jobs:
           echo "Pull request number: ${{ github.event.issue.pull_request.number }}"
           echo "Pull request title: ${{ github.event.issue.pull_request.title }}"
           echo "Pull request body: ${{ github.event.issue.pull_request.body }}"
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Get PR details
+        id: pr
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const prNumber = context.payload.issue?.number || context.payload.pull_request?.number;
+            if (!prNumber) {
+              core.setFailed('Could not determine PR number');
+              return;
+            }
+
+            const { data: pullRequest } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            core.setOutput('branch', pullRequest.head.ref);
+            core.setOutput('number', prNumber);
+            return pullRequest;
+
+      - name: Create acknowledgment comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const prNumber = ${{ steps.pr.outputs.number }};
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `## 🤖 Merge Bot Activated
+              I'm processing your merge request. Here's what I'll do:
+
+              1. ✅ Checkout the PR branch
+              2. ✅ Rebase onto main branch
+              3. ✅ Setup project dependencies
+              4. ✅ Regenerate API client
+              5. ✅ Commit any changes if needed
+              6. ✅ Merge the PR using squash method
+
+              I'll keep you updated on my progress. Please stand by...`
+            });
